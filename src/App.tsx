@@ -1,9 +1,14 @@
 import React, { useState } from "react"
 import QuestionCard from "./components/QuestionCard"
+import { Box, Button } from "@material-ui/core"
+import { ThemeProvider } from "@material-ui/core/styles"
+import { myTheme } from "./themes/myTheme"
 // Components
 import { fetchQuizQuestions } from "./API"
 // Types
 import { Difficulty, QuestionState } from "./API"
+// Styles
+import { GlobalStyle, Wrapper } from "./App.styles"
 
 const TOTAL_QUESTIONS = 10
 const TRIVIA_DIFFICULTY_LEVEL = Difficulty.EASY
@@ -54,7 +59,7 @@ const App = () => {
       if (isCorrect) {
         setScore((prev) => prev + 1)
       }
-      // Save anser in the array of user answers
+      // Save answer in the array of user answers
       const answerObject = {
         question: questions[questionArrayPosition].question,
         answer: selectedAnswer,
@@ -73,38 +78,63 @@ const App = () => {
     }
   }
 
+  const renderStartButton = () => {
+    if (isGameOver || userAnswers.length === TOTAL_QUESTIONS) {
+      return (
+        <Box m={2}>
+          <Button variant="contained" onClick={startQuiz}>
+            {isLastQuestion ? `Restart` : `Start`}
+          </Button>
+        </Box>
+      )
+    } else {
+      return null
+    }
+  }
+
+  const renderNextQuestionButton = () => {
+    const didUserAnswer = userAnswers.length === questionArrayPosition + 1
+    const isLastQuestion = questionArrayPosition === TOTAL_QUESTIONS - 1
+
+    if (!isGameOver && !isLoading && didUserAnswer && !isLastQuestion) {
+      return (
+        <Box m={2}>
+          <Button variant="contained" onClick={nextQuestion}>
+            Next Question
+          </Button>
+        </Box>
+      )
+    } else {
+      return null
+    }
+  }
+
   return (
-    <div>
-      <h1>Trivia</h1>
-      <div className="subtext">Built using React and Typescript</div>
-      {isGameOver || userAnswers.length === TOTAL_QUESTIONS ? (
-        <button className="start" onClick={startQuiz}>
-          {isLastQuestion ? `Restart` : `Start`}
-        </button>
-      ) : null}
-      {!isGameOver && <p className="score">Score: {score}</p>}
-      {isLoading ? <p>Loading questions...</p> : null}
-      {!isLoading && !isGameOver && (
-        <QuestionCard
-          questionNumber={questionArrayPosition + 1}
-          totalQuestions={TOTAL_QUESTIONS}
-          question={questions[questionArrayPosition].question}
-          answers={questions[questionArrayPosition].answers}
-          userAnswer={
-            userAnswers ? userAnswers[questionArrayPosition] : undefined
-          }
-          callback={checkAnswer}
-        />
-      )}
-      {!isGameOver &&
-      !isLoading &&
-      userAnswers.length === questionArrayPosition + 1 &&
-      questionArrayPosition !== TOTAL_QUESTIONS - 1 ? (
-        <button className="next" onClick={nextQuestion}>
-          Next Question
-        </button>
-      ) : null}
-    </div>
+    <ThemeProvider theme={myTheme}>
+      <GlobalStyle />
+      <Wrapper>
+        <h1>Web Trivia</h1>
+        <div className="subtext">
+          Built using React, Typescript, and Open Trivia DB
+        </div>
+        {renderStartButton()}
+        {!isGameOver && <p className="score">Score: {score}</p>}
+        {isLoading ? <p>Loading questions...</p> : null}
+        {!isLoading && !isGameOver && (
+          <QuestionCard
+            questionNumber={questionArrayPosition + 1}
+            totalQuestions={TOTAL_QUESTIONS}
+            question={questions[questionArrayPosition].question}
+            answers={questions[questionArrayPosition].answers}
+            userAnswer={
+              userAnswers ? userAnswers[questionArrayPosition] : undefined
+            }
+            callback={checkAnswer}
+          />
+        )}
+        {renderNextQuestionButton()}
+      </Wrapper>
+    </ThemeProvider>
   )
 }
 
